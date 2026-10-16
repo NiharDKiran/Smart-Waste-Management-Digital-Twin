@@ -1,0 +1,105 @@
+# Waste class label mapping
+# Maps raw YOLO detection labels to EcoTwin's four canonical waste classes.
+# Each entry: raw_label -> { class, description }
+# If a detected label is not in this map, it is classified as "dry" by default.
+
+label_map:
+  banana:
+    class: wet
+    description: Organic fruit waste
+  apple:
+    class: wet
+    description: Organic fruit waste
+  orange:
+    class: wet
+    description: Organic fruit waste
+  broccoli:
+    class: wet
+    description: Organic vegetable waste
+  carrot:
+    class: wet
+    description: Organic vegetable waste
+  sandwich:
+    class: wet
+    description: Organic food waste
+  hot dog:
+    class: wet
+    description: Organic food waste
+  pizza:
+    class: wet
+    description: Organic food waste
+  donut:
+    class: wet
+    description: Organic food waste
+  cake:
+    class: wet
+    description: Organic food waste
+  bottle:
+    class: recyclable
+    description: Plastic or glass bottle
+  wine glass:
+    class: recyclable
+    description: Glass drinkware
+  cup:
+    class: recyclable
+    description: Disposable or reusable cup
+  fork:
+    class: recyclable
+    description: Metal or plastic utensil
+  knife:
+    class: recyclable
+    description: Metal or plastic utensil
+  spoon:
+    class: recyclable
+    description: Metal or plastic utensil
+  bowl:
+    class: recyclable
+    description: Disposable or reusable bowl
+  vase:
+    class: recyclable
+    description: Glass or ceramic vase
+  cell phone:
+    class: hazardous
+    description: Electronic waste
+  laptop:
+    class: hazardous
+    description: Electronic waste
+  remote:
+    class: hazardous
+    description: Electronic waste with battery
+  keyboard:
+    class: hazardous
+    description: Electronic waste
+  mouse:
+    class: hazardous
+    description: Electronic waste
+  toothbrush:
+    class: dry
+    description: Non-recyclable plastic item
+  scissors:
+    class: dry
+    description: Mixed material item
+  teddy bear:
+    class: dry
+    description: Non-recyclable textile
+  book:
+    class: dry
+    description: Paper product
+  handbag:
+    class: dry
+    description: Mixed material item
+  umbrella:
+    class: dry
+    description: Mixed material item
+  suitcase:
+    class: dry
+    description: Mixed material item
+  backpack:
+    class: dry
+    description: Mixed material item
+  tie:
+    class: dry
+    description: Textile waste
+
+default_class: dry
+default_description: General non-recyclable waste

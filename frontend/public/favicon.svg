@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="ecoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2D6A4F" />
+      <stop offset="50%" stop-color="#40916C" />
+      <stop offset="100%" stop-color="#1B4332" />
+    </linearGradient>
+    <linearGradient id="amberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F4A261" />
+      <stop offset="100%" stop-color="#E07B39" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#1B4332" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Outer Rounded Shield -->
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="url(#ecoGrad)" filter="url(#glow)"/>
+  
+  <!-- Subtle Inner Ring -->
+  <rect x="7" y="7" width="50" height="50" rx="11" fill="none" stroke="#52B788" stroke-width="1.5" stroke-opacity="0.3"/>
+
+  <!-- Twin Eco Nodes / Cycle Arrows Motif -->
+  <!-- Top Arch Arrow -->
+  <path d="M 22 24 C 24 16, 40 16, 42 24" fill="none" stroke="#D8F3DC" stroke-width="3.5" stroke-linecap="round"/>
+  <polygon points="41,20 45,25 39,26" fill="#D8F3DC"/>
+
+  <!-- Bottom Arch Arrow -->
+  <path d="M 42 40 C 40 48, 24 48, 22 40" fill="none" stroke="url(#amberGrad)" stroke-width="3.5" stroke-linecap="round"/>
+  <polygon points="23,44 19,39 25,38" fill="#E07B39"/>
+
+  <!-- Central Digital Twin Spark / Leaf Node -->
+  <circle cx="32" cy="32" r="5" fill="#74C69D"/>
+  <circle cx="32" cy="32" r="2.5" fill="#FFFFFF"/>
+
+  <!-- Satellite Twin Nodes -->
+  <circle cx="20" cy="32" r="2.5" fill="#B7E4C7"/>
+  <line x1="22.5" y1="32" x2="27" y2="32" stroke="#B7E4C7" stroke-width="1.5" stroke-dasharray="1 1"/>
+
+  <circle cx="44" cy="32" r="2.5" fill="#F4A261"/>
+  <line x1="37" y1="32" x2="41.5" y2="32" stroke="#F4A261" stroke-width="1.5" stroke-dasharray="1 1"/>
+</svg>

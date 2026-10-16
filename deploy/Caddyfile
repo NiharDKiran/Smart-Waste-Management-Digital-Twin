@@ -1,0 +1,43 @@
+# ═══════════════════════════════════════════════════════════════
+# EcoTwin Caddyfile Configuration
+# Provides automatic Let's Encrypt SSL, HTTP/3, compression,
+# and reverse proxy with zero manual certificate setup.
+# Replace 'ecotwin.yourdomain.com' with your actual custom domain.
+# ═══════════════════════════════════════════════════════════════
+
+ecotwin.yourdomain.com {
+    # Encode with gzip and zstd
+    encode zstd gzip
+
+    # Production Security Headers
+    header {
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.tile.openstreetmap.org; connect-src 'self' https://generativelanguage.googleapis.com; frame-ancestors 'none';"
+        -Server
+    }
+
+    # Request body size limit (matching 5MB image upload cap)
+    request_body {
+        max_size 10MB
+    }
+
+    # API Proxy to FastAPI Backend
+    handle /api/* {
+        reverse_proxy 127.0.0.1:8000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    # Static Frontend SPA
+    handle {
+        root * /var/www/ecotwin/frontend/dist
+        try_files {path} /index.html
+        file_server
+    }
+}

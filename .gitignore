@@ -1,0 +1,51 @@
+# ── Environment & Secrets ──
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.mypy_cache/
+
+# ── Model Weights ──
+*.pt
+*.onnx
+*.tflite
+
+# ── Database ──
+*.db
+*.db-journal
+*.sqlite3
+
+# ── Node / Frontend ──
+node_modules/
+frontend/dist/
+frontend/dist-ssr/
+*.local
+
+# ── IDE / Editor ──
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# ── Logs ──
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*

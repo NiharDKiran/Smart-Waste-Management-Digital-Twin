@@ -1,0 +1,40 @@
+# Emission factors for waste management operations
+# Each factor includes a source field for citation.
+# TODO: replace placeholder sources with verified references.
+
+emission_factors:
+  truck_per_km:
+    value: 0.27
+    unit: kg_co2_per_km
+    description: CO2 emissions per kilometer for a diesel waste collection truck
+    source: "TODO: cite EPA or local transport authority data"
+
+  overflow_cleanup:
+    value: 2.5
+    unit: kg_co2_per_incident
+    description: CO2 cost of an emergency overflow cleanup (extra truck dispatch, cleaning)
+    source: "TODO: cite waste management operational study"
+
+  landfill_per_kg:
+    value: 0.58
+    unit: kg_co2_per_kg
+    description: CO2 emissions per kg of waste sent to landfill
+    source: "TODO: cite IPCC or EPA landfill emission factors"
+
+  recycling_offset_per_kg:
+    value: -0.31
+    unit: kg_co2_per_kg
+    description: CO2 offset per kg of waste successfully recycled (negative means savings)
+    source: "TODO: cite recycling lifecycle analysis"
+
+  contamination_penalty:
+    value: 0.15
+    unit: kg_co2_per_contaminated_kg
+    description: Additional CO2 cost when contaminated waste cannot be recycled and goes to landfill
+    source: "TODO: cite waste contamination impact study"
+
+  segregation_intervention_factor:
+    value: 0.3
+    unit: reduction_fraction
+    description: Fraction by which contamination is reduced after a segregation awareness intervention
+    source: "TODO: cite behavioral intervention study"
