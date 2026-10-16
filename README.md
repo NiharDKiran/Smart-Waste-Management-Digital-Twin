@@ -3,7 +3,7 @@
 
 ---
 
-## 🌟 The Three Pillars
+## The Three Pillars
 
 1. **Computer Vision (YOLOv8 on CPU)**
    - Identifies objects in waste imagery and maps raw classes into four canonical segregation categories: **Wet, Dry, Recyclable, Hazardous**.
@@ -16,14 +16,14 @@
    - Computes nearest-neighbour collection routes, projected hours until overflow, and carbon footprints using emission factors from `backend/config/emission_factors.yaml`.
    - Forward scenario simulation allows facility directors to forecast interventions (*+Bins, Frequency shifts, Segregation awareness*).
 
-3. **Generative AI Advisory (Google Gemini 2.0 Flash)**
+3. **Generative AI Advisory (Google Gemini Flash / gemini-2.5-flash / gemini-2.0-flash / gemini-1.5-flash)**
    - Synthesizes live telemetry matrices into structured operational vulnerabilities and prioritized interventions.
-   - Outputs structured schemas with self-healing retry mechanisms and fallback cache.
+   - Outputs structured schemas with self-healing retry mechanisms and session fallback cache.
    - One-click **"Apply as Twin Scenario"** button immediately injects AI recommendations into the simulation sandbox.
 
 ---
 
-## 🚀 Quickstart & How to Run
+## Quickstart & How to Run
 
 ### Option A: One-Click Launch (Recommended)
 
@@ -63,11 +63,6 @@ start.bat
      ```powershell
      python -c "import secrets; print(secrets.token_urlsafe(32))"
      ```
-   - **`ADMIN_PASSWORD_HASH`**: Generate a salted hash for the admin password:
-     ```powershell
-     cd backend
-     python -c "from app.auth import hash_password; print(hash_password('your-password'))"
-     ```
 
 ---
 
@@ -79,8 +74,11 @@ Open PowerShell:
 cd backend
 
 # 2. Install dependencies (first time only)
-python -m pip install -r pyproject.toml
-# Or: pip install fastapi uvicorn ultralytics slowapi reportlab pydantic-settings
+python -m pip install .
+# Or install using requirements.txt:
+# python -m pip install -r requirements.txt
+# For testing dependencies:
+# python -m pip install ".[dev]"
 
 # 3. Start the FastAPI development server
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
@@ -116,7 +114,7 @@ npm run dev
 
 ---
 
-## 🧪 Testing & Verification
+## Testing & Verification
 
 - **Run backend test suite (45 unit & integration tests):**
   ```powershell
@@ -131,18 +129,20 @@ npm run dev
 
 ---
 
-## 📋 Methodology & Emission Factors
+## Methodology & Emission Factors
 
-| Factor Vector | Value | Unit | Accounting Basis |
-|---|---|---|---|
-| Diesel Transport | 0.210 | kg CO2/km | Direct vehicle tailpipe emissions per route kilometre |
-| Landfill Disposal | 1.420 | kg CO2/kg | Anaerobic decomposition fugitive methane generation |
-| Composting Diversion | -0.350 | kg CO2/kg | Avoided methane credit via aerobic organic decomposition |
-| Recycling Circularity | -0.850 | kg CO2/kg | Offset from displacing virgin material manufacturing |
+| Factor | Value | Unit | Description | Source |
+|---|---|---|---|---|
+| `truck_per_km` | 0.27 | kg_co2_per_km | CO2 emissions per kilometer for a diesel waste collection truck | TODO: cite EPA or local transport authority data |
+| `overflow_cleanup` | 2.5 | kg_co2_per_incident | CO2 cost of an emergency overflow cleanup (extra truck dispatch, cleaning) | TODO: cite waste management operational study |
+| `landfill_per_kg` | 0.58 | kg_co2_per_kg | CO2 emissions per kg of waste sent to landfill | TODO: cite IPCC or EPA landfill emission factors |
+| `recycling_offset_per_kg` | -0.31 | kg_co2_per_kg | CO2 offset per kg of waste successfully recycled (negative means savings) | TODO: cite recycling lifecycle analysis |
+| `contamination_penalty` | 0.15 | kg_co2_per_contaminated_kg | Additional CO2 cost when contaminated waste cannot be recycled and goes to landfill | TODO: cite waste contamination impact study |
+| `segregation_intervention_factor` | 0.3 | reduction_fraction | Fraction by which contamination is reduced after a segregation awareness intervention | TODO: cite behavioral intervention study |
 
 ---
 
-## 👨‍💻 Author & Contact
+## Author & Contact
 
 - **Lead Engineer:** Nihar D Kiran
 - **Email:** [nihardkiran@gmail.com](mailto:nihardkiran@gmail.com)

@@ -1,4 +1,4 @@
-@import "leaflet/dist/leaflet.css";
+@import 'leaflet/dist/leaflet.css';
 
 /* EcoTwin Modern Design Tokens */
 :root {
@@ -139,7 +139,7 @@
 }
 
 /* Light Theme Overrides */
-[data-theme="light"] {
+[data-theme='light'] {
   --theme-mode: light;
 
   --color-base-50: #ffffff;
@@ -239,8 +239,9 @@ body {
   color: var(--color-text-primary);
   background-color: var(--color-surface);
   min-height: 100vh;
-  overflow-x: hidden;
-  transition: background-color 0.25s ease, color 0.25s ease;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
 }
 
 a {
@@ -259,22 +260,38 @@ a:focus-visible {
   border-radius: var(--radius-sm);
 }
 
-img, svg {
+img,
+svg,
+canvas,
+video {
   display: block;
   max-width: 100%;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: var(--weight-semibold);
   line-height: var(--leading-tight);
   color: var(--color-text-primary);
   letter-spacing: -0.02em;
 }
 
-h1 { font-size: var(--text-3xl); }
-h2 { font-size: var(--text-2xl); }
-h3 { font-size: var(--text-xl); }
-h4 { font-size: var(--text-lg); }
+h1 {
+  font-size: var(--text-3xl);
+}
+h2 {
+  font-size: var(--text-2xl);
+}
+h3 {
+  font-size: var(--text-xl);
+}
+h4 {
+  font-size: var(--text-lg);
+}
 
 p {
   margin-bottom: var(--space-4);
@@ -342,4 +359,22 @@ p {
 
 .skip-link:focus {
   top: 0;
+}
+
+/* Enforce max 10px radius and no decorative gradients for all buttons & segmented controls */
+button,
+.btn,
+.segmented-control,
+.segmented-btn {
+  border-radius: 10px;
+}
+
+button,
+.btn {
+  background-image: none !important;
+}
+
+.btn-sm,
+.segmented-btn {
+  border-radius: 8px;
 }

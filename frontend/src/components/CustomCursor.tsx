@@ -70,7 +70,9 @@ export const CustomCursor: React.FC = () => {
           ringRef.current.style.transform = `translate3d(${currentX - offset}px, ${currentY - offset}px, 0)`;
           ringRef.current.style.width = isPointer ? '36px' : '24px';
           ringRef.current.style.height = isPointer ? '36px' : '24px';
-          ringRef.current.style.backgroundColor = isPointer ? 'rgba(45, 106, 79, 0.12)' : 'transparent';
+          ringRef.current.style.backgroundColor = isPointer
+            ? 'rgba(45, 106, 79, 0.12)'
+            : 'transparent';
         }
       }
       rafId = requestAnimationFrame(animate);
@@ -125,7 +127,8 @@ export const CustomCursor: React.FC = () => {
           zIndex: 99998,
           opacity: 0,
           willChange: 'transform, width, height',
-          transition: 'opacity 0.2s ease, width 0.15s ease, height 0.15s ease, background-color 0.15s ease',
+          transition:
+            'opacity 0.2s ease, width 0.15s ease, height 0.15s ease, background-color 0.15s ease',
         }}
       />
     </>

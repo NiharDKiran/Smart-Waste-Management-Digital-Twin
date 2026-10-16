@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { 
-  AlertTriangle, 
-  Truck, 
-  Leaf, 
-  Trash2, 
-  Filter, 
-  Search, 
+import {
+  AlertTriangle,
+  Truck,
+  Leaf,
+  Trash2,
+  Filter,
+  Search,
   RefreshCw,
   Building,
   Activity,
-  Layers
+  Layers,
 } from 'lucide-react';
 import { Bin, MetricsSnapshot } from '../api';
 import { FacilityMap } from './FacilityMap';
@@ -39,7 +39,8 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   const zones = Array.from(new Set(bins.map((b) => b.zone_name)));
 
   const getBinFillPct = (b: Bin) => {
-    if (!b.capacity_liters || b.capacity_liters <= 0) return Math.min(100, Math.round(b.fill_level));
+    if (!b.capacity_liters || b.capacity_liters <= 0)
+      return Math.min(100, Math.round(b.fill_level));
     return Math.min(100, Math.max(0, Math.round((b.fill_level / b.capacity_liters) * 100)));
   };
 
@@ -76,9 +77,28 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       {/* Top Banner & Refresh */}
       <div className="view-toolbar">
         <div>
-          <h1 className="view-title">Digital Twin Operations Center</h1>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              flexWrap: 'wrap',
+              marginBottom: '4px',
+            }}
+          >
+            <h1 className="view-title" style={{ margin: 0 }}>
+              Digital Twin Operations Center
+            </h1>
+            <span
+              className="badge-pill badge-warning"
+              style={{ fontWeight: 600, letterSpacing: '0.04em' }}
+            >
+              Simulated Data
+            </span>
+          </div>
           <p className="view-description">
-            Universal real-time digital twin monitoring 20 telemetry nodes across 5 facility sectors.
+            Universal real-time digital twin monitoring 20 telemetry nodes across 5 facility sectors
+            &bull; Simulated Data
           </p>
         </div>
         <div className="toolbar-controls">
@@ -103,9 +123,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
               <AlertTriangle size={16} />
             </div>
           </div>
-          <div className="kpi-value font-mono">
-            {metrics?.overflow_incidents ?? 0}
-          </div>
+          <div className="kpi-value font-mono">{metrics?.overflow_incidents ?? 0}</div>
           <div className="kpi-footnote">
             {metrics?.bins_at_risk ?? 0} bins currently at immediate risk
           </div>
@@ -122,9 +140,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             {(metrics?.total_truck_distance_km ?? 0).toFixed(1)}{' '}
             <span className="kpi-unit">km</span>
           </div>
-          <div className="kpi-footnote">
-            Nearest-neighbour optimized collection route
-          </div>
+          <div className="kpi-footnote">Nearest-neighbour optimized collection route</div>
         </div>
 
         <div className="kpi-card">
@@ -137,9 +153,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           <div className="kpi-value font-mono">
             {Math.round((metrics?.avg_contamination_rate ?? 0) * 100)}%
           </div>
-          <div className="kpi-footnote">
-            Cross-stream improper disposal index
-          </div>
+          <div className="kpi-footnote">Cross-stream improper disposal index</div>
         </div>
 
         <div className="kpi-card">
@@ -150,12 +164,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             </div>
           </div>
           <div className="kpi-value font-mono">
-            {(metrics?.estimated_co2_kg ?? 0).toFixed(1)}{' '}
-            <span className="kpi-unit">kg</span>
+            {(metrics?.estimated_co2_kg ?? 0).toFixed(1)} <span className="kpi-unit">kg</span>
           </div>
-          <div className="kpi-footnote">
-            Based on diesel fleet & landfill emissions factors
-          </div>
+          <div className="kpi-footnote">Based on diesel fleet & landfill emissions factors</div>
         </div>
 
         <div className="kpi-card">
@@ -165,12 +176,8 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
               <Trash2 size={16} />
             </div>
           </div>
-          <div className="kpi-value font-mono">
-            {Math.round(metrics?.avg_fill_level ?? 0)}%
-          </div>
-          <div className="kpi-footnote">
-            Across all 20 active facility receptacles
-          </div>
+          <div className="kpi-value font-mono">{Math.round(metrics?.avg_fill_level ?? 0)}%</div>
+          <div className="kpi-footnote">Across all 20 active facility receptacles</div>
         </div>
       </div>
 
@@ -207,7 +214,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                   <span className="zone-pill-type font-mono">{z.type}</span>
                 </div>
                 <div className="zone-pill-metrics">
-                  <span>Fill: <strong className="font-mono">{Math.round(z.avgFill)}%</strong></span>
+                  <span>
+                    Fill: <strong className="font-mono">{Math.round(z.avgFill)}%</strong>
+                  </span>
                   {z.riskCount > 0 ? (
                     <span className="badge-critical font-mono">{z.riskCount} Alert</span>
                   ) : (
@@ -281,7 +290,11 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                         </div>
                         <div
                           className={`bin-item-badge ${
-                            isCritical ? 'badge-error' : isWarning ? 'badge-warning' : 'badge-primary'
+                            isCritical
+                              ? 'badge-error'
+                              : isWarning
+                                ? 'badge-warning'
+                                : 'badge-primary'
                           }`}
                         >
                           <span className="font-mono">{pct}%</span>
@@ -296,8 +309,8 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                             backgroundColor: isCritical
                               ? 'var(--color-error)'
                               : isWarning
-                              ? 'var(--color-warning)'
-                              : 'var(--color-primary-500)',
+                                ? 'var(--color-warning)'
+                                : 'var(--color-primary-500)',
                           }}
                         />
                       </div>
@@ -309,9 +322,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                               Overflow in {bin.hours_until_overflow ?? 1}h
                             </span>
                           ) : (
-                            <span className="text-muted">
-                              Rate: +{bin.per_hour_fill_rate}L/h
-                            </span>
+                            <span className="text-muted">Rate: +{bin.per_hour_fill_rate}L/h</span>
                           )}
                         </span>
                         <span className="text-muted">

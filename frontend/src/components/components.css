@@ -38,19 +38,23 @@
 
 /* Primary */
 .btn-primary {
-  background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600));
+  background-color: var(--color-primary-600);
+  background-image: none;
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--color-primary-400), var(--color-primary-500));
+  background-color: var(--color-primary-500);
+  background-image: none;
   box-shadow: 0 4px 16px rgba(16, 185, 129, 0.45);
   transform: translateY(-1px);
 }
 
 .btn-primary:active:not(:disabled) {
+  background-color: var(--color-primary-700);
+  background-image: none;
   transform: translateY(0);
   box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
 }
@@ -58,6 +62,7 @@
 /* Secondary */
 .btn-secondary {
   background-color: var(--color-surface-raised);
+  background-image: none;
   color: var(--color-text-primary);
   border: var(--border-subtle);
   box-shadow: var(--elevation-1);
@@ -77,6 +82,7 @@
 /* Destructive */
 .btn-destructive {
   background-color: var(--color-error);
+  background-image: none;
   color: #ffffff;
   border-color: rgba(239, 68, 68, 0.3);
 }
@@ -95,13 +101,13 @@
 .btn-sm {
   padding: 5px 12px;
   font-size: var(--text-xs);
-  border-radius: var(--radius-md);
+  border-radius: 8px;
 }
 
 .btn-lg {
   padding: var(--space-3) var(--space-6);
   font-size: var(--text-base);
-  border-radius: var(--radius-lg);
+  border-radius: 10px;
 }
 
 /* Card component styles */
@@ -111,7 +117,10 @@
   border: var(--border-subtle);
   box-shadow: var(--elevation-1);
   padding: var(--space-6);
-  transition: box-shadow var(--transition-base), transform var(--transition-base), border-color var(--transition-base);
+  transition:
+    box-shadow var(--transition-base),
+    transform var(--transition-base),
+    border-color var(--transition-base);
   position: relative;
 }
 
@@ -167,7 +176,9 @@
   border: var(--border-default);
   border-radius: var(--radius-md);
   box-shadow: var(--neu-inset);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
   width: 100%;
 }
 
@@ -213,7 +224,9 @@ select.input-field {
   border: var(--border-default);
   border-radius: var(--radius-md);
   box-shadow: var(--neu-inset);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
   width: 100%;
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235C4F44' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
@@ -242,8 +255,12 @@ select.input-field {
 }
 
 @keyframes skeleton-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -382,7 +399,7 @@ select.input-field {
 }
 
 .badge-critical {
-  background-color: #FDECEA;
+  background-color: #fdecea;
   color: var(--color-error);
 }
 
@@ -392,7 +409,7 @@ select.input-field {
 }
 
 .badge-info {
-  background-color: #E3F2FD;
+  background-color: #e3f2fd;
   color: var(--color-info);
 }
 

@@ -1,19 +1,23 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { 
-  Scan, 
-  Upload, 
-  CheckCircle2, 
-  AlertCircle, 
-  Sparkles, 
-  Trash2, 
-  RefreshCw, 
+import {
+  Scan,
+  Upload,
+  CheckCircle2,
+  AlertCircle,
+  Sparkles,
+  Trash2,
+  RefreshCw,
   ArrowRight,
   Info,
   Camera,
   Video,
   VideoOff,
   Eye,
-  Zap
+  Zap,
+  Leaf,
+  Package,
+  Coffee,
+  Battery,
 } from 'lucide-react';
 import { Bin, DetectionResponse, api } from '../api';
 
@@ -43,7 +47,7 @@ const PRESET_SAMPLES = [
       ctx.lineWidth = 3;
       ctx.stroke();
     },
-    iconText: '🍌',
+    icon: Leaf,
   },
   {
     id: 'bottle',
@@ -59,7 +63,7 @@ const PRESET_SAMPLES = [
       ctx.fillStyle = '#0077B6';
       ctx.fillRect(185, 45, 30, 25);
     },
-    iconText: '🧴',
+    icon: Package,
   },
   {
     id: 'cup',
@@ -80,7 +84,7 @@ const PRESET_SAMPLES = [
       ctx.strokeStyle = '#64748B';
       ctx.stroke();
     },
-    iconText: '🥤',
+    icon: Coffee,
   },
   {
     id: 'battery',
@@ -95,11 +99,11 @@ const PRESET_SAMPLES = [
       ctx.fillStyle = '#C0392B';
       ctx.fillRect(180, 50, 40, 20);
     },
-    iconText: '🔋',
+    icon: Battery,
   },
 ];
 
-function createPresetFile(sample: typeof PRESET_SAMPLES[0]): Promise<File> {
+function createPresetFile(sample: (typeof PRESET_SAMPLES)[0]): Promise<File> {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
     canvas.width = 400;
@@ -142,7 +146,9 @@ export const VisionView: React.FC<VisionViewProps> = ({
   const [mode, setMode] = useState<'upload' | 'camera'>('upload');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [targetBinId, setTargetBinId] = useState<number | undefined>(initialBinId || (bins[0]?.id ?? 1));
+  const [targetBinId, setTargetBinId] = useState<number | undefined>(
+    initialBinId || (bins[0]?.id ?? 1)
+  );
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [useGeminiVision, setUseGeminiVision] = useState(true);
   const [isContinuousScanning, setIsContinuousScanning] = useState(false);
@@ -227,7 +233,10 @@ export const VisionView: React.FC<VisionViewProps> = ({
       });
     }
     constraintSets.push(
-      { video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
+      {
+        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      },
       { video: { width: { ideal: 640 }, height: { ideal: 480 } }, audio: false },
       { video: true, audio: false }
     );
@@ -253,15 +262,18 @@ export const VisionView: React.FC<VisionViewProps> = ({
       const errName = lastError?.name ?? 'UnknownError';
       let message = 'Unable to access webcam. Please check camera permissions or use Upload.';
       if (errName === 'NotAllowedError' || errName === 'PermissionDeniedError') {
-        message = 'Camera permission denied. Click the lock/camera icon in your browser address bar to allow camera access, then retry.';
+        message =
+          'Camera permission denied. Click the lock/camera icon in your browser address bar to allow camera access, then retry.';
       } else if (errName === 'NotFoundError' || errName === 'DevicesNotFoundError') {
-        message = 'No camera device detected on this system. You can test detection with the Upload mode.';
+        message =
+          'No camera device detected on this system. You can test detection with the Upload mode.';
       } else if (errName === 'NotReadableError') {
-        message = 'Camera is currently locked or in use by another application. Close other camera apps and retry.';
+        message =
+          'Camera is currently locked or in use by another application. Close other camera apps and retry.';
       }
       console.error('Camera initialization error:', lastError);
       setCameraError(message);
-      showToast('Camera access failed — ' + (lastError?.name ?? 'check permissions'), 'error');
+      showToast('Camera access failed: ' + (lastError?.name ?? 'check permissions'), 'error');
       return;
     }
 
@@ -303,11 +315,11 @@ export const VisionView: React.FC<VisionViewProps> = ({
 
   const handleModeSwitch = (newMode: 'upload' | 'camera') => {
     setMode(newMode);
-    if (newMode === 'camera') {
-      startCamera();
-    } else {
+    if (newMode !== 'camera') {
       stopCamera();
     }
+    // Camera mode: show the "Activate Camera" prompt instead of
+    // auto-requesting permission, so the user can grant access when ready.
   };
 
   // Capture frame from live video feed with async frame-ready wait
@@ -342,14 +354,18 @@ export const VisionView: React.FC<VisionViewProps> = ({
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     return new Promise((resolve) => {
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const file = new File([blob], `live-frame-${Date.now()}.jpg`, { type: 'image/jpeg' });
-          resolve(file);
-        } else {
-          resolve(null);
-        }
-      }, 'image/jpeg', 0.90);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const file = new File([blob], `live-frame-${Date.now()}.jpg`, { type: 'image/jpeg' });
+            resolve(file);
+          } else {
+            resolve(null);
+          }
+        },
+        'image/jpeg',
+        0.9
+      );
     });
   };
 
@@ -396,13 +412,14 @@ export const VisionView: React.FC<VisionViewProps> = ({
         const width = x2 - x1;
         const height = y2 - y1;
 
-        const color = det.waste_class === 'wet'
-          ? '#2D6A4F'
-          : det.waste_class === 'recyclable'
-          ? '#2980B9'
-          : det.waste_class === 'hazardous'
-          ? '#E63946'
-          : '#B8A99A';
+        const color =
+          det.waste_class === 'wet'
+            ? '#2D6A4F'
+            : det.waste_class === 'recyclable'
+              ? '#2980B9'
+              : det.waste_class === 'hazardous'
+                ? '#E63946'
+                : '#B8A99A';
 
         ctx.strokeStyle = color;
         ctx.lineWidth = 3;
@@ -456,7 +473,7 @@ export const VisionView: React.FC<VisionViewProps> = ({
     }
   };
 
-  const handleSelectPreset = async (sample: typeof PRESET_SAMPLES[0]) => {
+  const handleSelectPreset = async (sample: (typeof PRESET_SAMPLES)[0]) => {
     const file = await createPresetFile(sample);
     setSelectedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
@@ -476,8 +493,10 @@ export const VisionView: React.FC<VisionViewProps> = ({
   };
 
   const chosenBin = bins.find((b) => b.id === targetBinId);
-  const chosenBinPct = chosenBin 
-    ? (chosenBin.capacity_liters > 0 ? (chosenBin.fill_level / chosenBin.capacity_liters) * 100 : chosenBin.fill_level)
+  const chosenBinPct = chosenBin
+    ? chosenBin.capacity_liters > 0
+      ? (chosenBin.fill_level / chosenBin.capacity_liters) * 100
+      : chosenBin.fill_level
     : 0;
 
   return (
@@ -486,7 +505,9 @@ export const VisionView: React.FC<VisionViewProps> = ({
         <div>
           <h1 className="view-title">Computer Vision Classifier (YOLOv8 + Gemini Vision)</h1>
           <p className="view-description">
-            Live camera detection &amp; image classifier for waste segregation (Wet, Dry, Recyclable, Hazardous). Integrates live stream telemetry directly into digital twin nodes.
+            Live camera detection &amp; image classifier for waste segregation (Wet, Dry,
+            Recyclable, Hazardous). Integrates live stream telemetry directly into digital twin
+            nodes.
           </p>
         </div>
       </div>
@@ -567,59 +588,90 @@ export const VisionView: React.FC<VisionViewProps> = ({
                             e.currentTarget.play().catch(console.warn);
                           }}
                         />
-                        <canvas
-                          ref={overlayCanvasRef}
-                          className="camera-overlay-canvas"
-                        />
+                        <canvas ref={overlayCanvasRef} className="camera-overlay-canvas" />
                         <div className="camera-live-badge">
                           <span className="pulse-dot"></span>
                           LIVE WEBCAM
                         </div>
                       </>
                     ) : (
-                    <div className="camera-inactive-placeholder">
-                      {cameraError ? (
-                        <>
-                          <AlertCircle size={40} style={{ color: 'var(--color-error)', margin: '0 auto 12px' }} />
-                          <p style={{ color: 'var(--color-error)', fontWeight: 600, fontSize: '0.8rem', marginBottom: 8 }}>Camera Error</p>
-                          <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', maxWidth: 260, margin: '0 auto 16px', lineHeight: 1.5 }}>{cameraError}</p>
-                          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <div className="camera-inactive-placeholder">
+                        {cameraError ? (
+                          <>
+                            <AlertCircle
+                              size={40}
+                              style={{ color: 'var(--color-error)', margin: '0 auto 12px' }}
+                            />
+                            <p
+                              style={{
+                                color: 'var(--color-error)',
+                                fontWeight: 600,
+                                fontSize: '0.8rem',
+                                marginBottom: 8,
+                              }}
+                            >
+                              Camera Error
+                            </p>
+                            <p
+                              style={{
+                                fontSize: '0.75rem',
+                                color: 'var(--color-text-secondary)',
+                                maxWidth: 260,
+                                margin: '0 auto 16px',
+                                lineHeight: 1.5,
+                              }}
+                            >
+                              {cameraError}
+                            </p>
+                            <div
+                              style={{
+                                display: 'flex',
+                                gap: 8,
+                                justifyContent: 'center',
+                                flexWrap: 'wrap',
+                              }}
+                            >
+                              <button
+                                type="button"
+                                className="btn btn-primary btn-sm"
+                                onClick={() => {
+                                  setCameraError(null);
+                                  startCamera();
+                                }}
+                              >
+                                <Camera size={14} />
+                                <span>Retry Camera</span>
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-secondary btn-sm"
+                                onClick={() => handleModeSwitch('upload')}
+                              >
+                                <Upload size={14} />
+                                <span>Use Upload Instead</span>
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <VideoOff size={36} style={{ opacity: 0.5, margin: '0 auto 12px' }} />
+                            <p style={{ fontSize: '0.8rem', marginBottom: 16 }}>
+                              Click below to activate your webcam
+                            </p>
                             <button
                               type="button"
                               className="btn btn-primary btn-sm"
-                              onClick={() => { setCameraError(null); startCamera(); }}
+                              onClick={() => startCamera()}
                             >
                               <Camera size={14} />
-                              <span>Retry Camera</span>
+                              <span>Activate Camera</span>
                             </button>
-                            <button
-                              type="button"
-                              className="btn btn-secondary btn-sm"
-                              onClick={() => handleModeSwitch('upload')}
-                            >
-                              <Upload size={14} />
-                              <span>Use Upload Instead</span>
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <VideoOff size={36} style={{ opacity: 0.5, margin: '0 auto 12px' }} />
-                          <p style={{ fontSize: '0.8rem', marginBottom: 16 }}>Click below to activate your webcam</p>
-                          <button
-                            type="button"
-                            className="btn btn-primary btn-sm"
-                            onClick={() => startCamera()}
-                          >
-                            <Camera size={14} />
-                            <span>Activate Camera</span>
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </>
               ) : (
                 /* Drop area */
                 <div
@@ -650,9 +702,7 @@ export const VisionView: React.FC<VisionViewProps> = ({
                       <div className="dropzone-prompt">
                         <strong>Click to upload</strong> or drag &amp; drop
                       </div>
-                      <div className="dropzone-sub">
-                        Supports JPEG, PNG, WebP up to 5MB
-                      </div>
+                      <div className="dropzone-sub">Supports JPEG, PNG, WebP up to 5MB</div>
                     </div>
                   )}
                 </div>
@@ -687,7 +737,9 @@ export const VisionView: React.FC<VisionViewProps> = ({
                   <Zap size={18} className="ai-vision-icon" />
                   <div>
                     <div className="ai-vision-title">Gemini Multi-Modal AI Vision</div>
-                    <div className="ai-vision-subtitle">Zero-shot categorization for complex items &amp; packaging</div>
+                    <div className="ai-vision-subtitle">
+                      Zero-shot categorization for complex items &amp; packaging
+                    </div>
                   </div>
                 </div>
                 <label className="switch-toggle" title="Toggle Gemini Vision">
@@ -708,17 +760,22 @@ export const VisionView: React.FC<VisionViewProps> = ({
                     <span>Quick test reference samples:</span>
                   </div>
                   <div className="presets-row">
-                    {PRESET_SAMPLES.map((sample) => (
-                      <button
-                        key={sample.id}
-                        type="button"
-                        className="preset-chip"
-                        onClick={() => handleSelectPreset(sample)}
-                      >
-                        <span className="preset-chip-icon">{sample.iconText}</span>
-                        <span className="preset-chip-name">{sample.name}</span>
-                      </button>
-                    ))}
+                    {PRESET_SAMPLES.map((sample) => {
+                      const Icon = sample.icon;
+                      return (
+                        <button
+                          key={sample.id}
+                          type="button"
+                          className="preset-chip"
+                          onClick={() => handleSelectPreset(sample)}
+                        >
+                          <span className="preset-chip-icon">
+                            <Icon size={14} />
+                          </span>
+                          <span className="preset-chip-name">{sample.name}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -735,9 +792,10 @@ export const VisionView: React.FC<VisionViewProps> = ({
                   className="filter-select w-full"
                 >
                   {bins.map((bin) => {
-                    const fill = bin.capacity_liters > 0
-                      ? Math.round((bin.fill_level / bin.capacity_liters) * 100)
-                      : Math.round(bin.fill_level);
+                    const fill =
+                      bin.capacity_liters > 0
+                        ? Math.round((bin.fill_level / bin.capacity_liters) * 100)
+                        : Math.round(bin.fill_level);
                     return (
                       <option key={bin.id} value={bin.id}>
                         {bin.name} ({bin.zone_name}) &bull; Fill: {Math.min(100, fill)}%
@@ -755,10 +813,20 @@ export const VisionView: React.FC<VisionViewProps> = ({
                   type="button"
                   className="btn btn-primary btn-lg w-full"
                   onClick={handleRunDetection}
-                  disabled={(mode === 'upload' && !selectedFile) || (mode === 'camera' && !cameraActive) || isAnalyzing}
+                  disabled={
+                    (mode === 'upload' && !selectedFile) ||
+                    (mode === 'camera' && !cameraActive) ||
+                    isAnalyzing
+                  }
                 >
                   <Scan size={18} className={isAnalyzing ? 'icon-spin' : ''} />
-                  <span>{isAnalyzing ? 'Running Inference...' : mode === 'camera' ? 'Capture & Update Twin' : 'Classify & Update Twin'}</span>
+                  <span>
+                    {isAnalyzing
+                      ? 'Running Inference...'
+                      : mode === 'camera'
+                        ? 'Capture & Update Twin'
+                        : 'Classify & Update Twin'}
+                  </span>
                 </button>
               </div>
             </div>
@@ -784,7 +852,8 @@ export const VisionView: React.FC<VisionViewProps> = ({
                   <Scan size={48} className="empty-state-icon" />
                   <h3>Awaiting Image Analysis</h3>
                   <p>
-                    Select an image or choose one of the quick test presets to evaluate YOLOv8 object detection, label mapping, and closed-loop twin updates.
+                    Select an image or choose one of the quick test presets to evaluate YOLOv8
+                    object detection, label mapping, and closed-loop twin updates.
                   </p>
                 </div>
               ) : (
@@ -806,10 +875,10 @@ export const VisionView: React.FC<VisionViewProps> = ({
                     const badgeColor = isWet
                       ? 'var(--color-primary-500)'
                       : isRecyclable
-                      ? '#2980B9'
-                      : isHazardous
-                      ? 'var(--color-error)'
-                      : '#B8A99A';
+                        ? '#2980B9'
+                        : isHazardous
+                          ? 'var(--color-error)'
+                          : '#B8A99A';
 
                     return (
                       <div key={idx} className="classification-card">
@@ -835,10 +904,16 @@ export const VisionView: React.FC<VisionViewProps> = ({
                             <span>Recommended Sorting & Handling</span>
                           </div>
                           <p className="instruction-text">
-                            {isWet && 'Deposit in green compost receptacles. Transport to campus biodigester / organic composting yard.'}
-                            {isRecyclable && 'Place in blue dry/recycling bin. Ensure container is rinsed of food residues to prevent batch contamination.'}
-                            {isHazardous && 'Segregate immediately in red containment locker. Requires specialized hazardous waste handling.'}
-                            {!isWet && !isRecyclable && !isHazardous && 'Dispose in general non-recyclable dry waste stream for scheduled municipal transfer.'}
+                            {isWet &&
+                              'Deposit in green compost receptacles. Transport to campus biodigester / organic composting yard.'}
+                            {isRecyclable &&
+                              'Place in blue dry/recycling bin. Ensure container is rinsed of food residues to prevent batch contamination.'}
+                            {isHazardous &&
+                              'Segregate immediately in red containment locker. Requires specialized hazardous waste handling.'}
+                            {!isWet &&
+                              !isRecyclable &&
+                              !isHazardous &&
+                              'Dispose in general non-recyclable dry waste stream for scheduled municipal transfer.'}
                           </p>
                         </div>
                       </div>
@@ -856,16 +931,21 @@ export const VisionView: React.FC<VisionViewProps> = ({
                         <div>
                           <div className="impact-label">New Fill Level</div>
                           <div className="impact-val font-mono">
-                            {chosenBinPct.toFixed(1)}% ({chosenBin.fill_level.toFixed(1)}L / {chosenBin.capacity_liters}L)
+                            {chosenBinPct.toFixed(1)}% ({chosenBin.fill_level.toFixed(1)}L /{' '}
+                            {chosenBin.capacity_liters}L)
                           </div>
                         </div>
                         <div>
                           <div className="impact-label">Contamination Index</div>
-                          <div className="impact-val font-mono">{Math.round(chosenBin.contamination_score * 100)}%</div>
+                          <div className="impact-val font-mono">
+                            {Math.round(chosenBin.contamination_score * 100)}%
+                          </div>
                         </div>
                         <div>
                           <div className="impact-label">Hours Until Overflow</div>
-                          <div className="impact-val font-mono">{chosenBin.hours_until_overflow ?? '>48'}h</div>
+                          <div className="impact-val font-mono">
+                            {chosenBin.hours_until_overflow ?? '>48'}h
+                          </div>
                         </div>
                       </div>
                     </div>

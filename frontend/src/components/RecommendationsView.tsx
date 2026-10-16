@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { 
-  Sparkles, 
-  AlertCircle, 
-  ArrowRight, 
-  CheckCircle2, 
-  RefreshCw, 
-  Sliders, 
-  Layers, 
-  Zap, 
+import {
+  Sparkles,
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+  RefreshCw,
+  Sliders,
+  Layers,
+  Zap,
   TrendingDown,
-  Info
+  Info,
 } from 'lucide-react';
 import { RecommendationResponse, api } from '../api';
 
@@ -33,7 +33,12 @@ export const RecommendationsView: React.FC<RecommendationsViewProps> = ({
       showToast('Generative AI recommendations generated successfully.', 'success');
     } catch (err: any) {
       console.error(err);
-      showToast(err.detail || 'Failed to fetch AI recommendations from backend.', 'error');
+      setData(null);
+      const errorMsg =
+        err?.detail ||
+        err?.error ||
+        'AI recommendations unavailable: Google Gemini API is not reachable and no session cache exists.';
+      showToast(errorMsg, 'error');
     } finally {
       setLoading(false);
     }
@@ -45,7 +50,8 @@ export const RecommendationsView: React.FC<RecommendationsViewProps> = ({
         <div>
           <h1 className="view-title">Generative AI Facility Advisory (Google Gemini)</h1>
           <p className="view-description">
-            Autonomous intelligence synthesizing real-time telemetry, contamination patterns, and route bottlenecks into prioritized facility interventions.
+            Autonomous intelligence synthesizing real-time telemetry, contamination patterns, and
+            route bottlenecks into prioritized facility interventions.
           </p>
         </div>
 
@@ -65,9 +71,12 @@ export const RecommendationsView: React.FC<RecommendationsViewProps> = ({
       {!data ? (
         <div className="empty-state-large">
           <Sparkles size={48} className="empty-state-icon" />
-          <h3>Generate Operational Strategy</h3>
+          <h3>No AI Recommendations Available</h3>
           <p>
-            Click "Generate AI Insights" above to dispatch the current digital twin telemetry snapshot to Google Gemini. Gemini will evaluate overflow vectors and produce structured, actionable recommendations.
+            No active recommendation report exists for this session. Click &quot;Generate AI
+            Insights&quot; above to dispatch the current digital twin telemetry snapshot to Google
+            Gemini. If the API is unavailable and no prior session inference exists, recommendations
+            cannot be loaded.
           </p>
         </div>
       ) : (
@@ -75,11 +84,17 @@ export const RecommendationsView: React.FC<RecommendationsViewProps> = ({
           {/* Header Bar */}
           <div className="ai-status-banner">
             <div className="banner-badge">
-              <span className="dot dot-active"></span>
-              <span>{data.is_cached ? 'Served from Engine Cache' : 'Live Google Gemini Flash Inference'}</span>
+              <span className={`dot ${data.is_cached ? 'dot-warning' : 'dot-active'}`}></span>
+              <span>
+                {data.is_cached
+                  ? `Cached Session Inference (${data.timestamp || 'Earlier Session'})`
+                  : 'Live Google Gemini Inference'}
+              </span>
             </div>
             <div className="banner-meta font-mono text-xs text-muted">
-              Source: {data.data_source}
+              {data.is_cached
+                ? `Cached at: ${data.timestamp || 'Unknown'} • Source: ${data.data_source}`
+                : `Generated: ${data.timestamp || 'Live'} • Source: ${data.data_source}`}
             </div>
           </div>
 
@@ -150,9 +165,7 @@ export const RecommendationsView: React.FC<RecommendationsViewProps> = ({
                         <div className="issue-header">
                           <span className="issue-title">{issue.title}</span>
                           <span
-                            className={`badge-pill ${
-                              isHigh ? 'badge-error' : 'badge-warning'
-                            }`}
+                            className={`badge-pill ${isHigh ? 'badge-error' : 'badge-warning'}`}
                           >
                             {issue.severity.toUpperCase()} SEVERITY
                           </span>
@@ -160,7 +173,8 @@ export const RecommendationsView: React.FC<RecommendationsViewProps> = ({
                         <p className="issue-desc">{issue.description}</p>
                         <div className="issue-meta">
                           <span>
-                            <strong>Affected Zones:</strong> {issue.affected_zones?.join(', ') || 'Facility-wide'}
+                            <strong>Affected Zones:</strong>{' '}
+                            {issue.affected_zones?.join(', ') || 'Facility-wide'}
                           </span>
                           {issue.affected_bins?.length > 0 && (
                             <span className="font-mono text-xs">

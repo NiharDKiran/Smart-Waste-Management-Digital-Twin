@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { Routes, Route, useNavigate, Link } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { CustomCursor } from './components/CustomCursor';
 import { OverviewView } from './components/OverviewView';
@@ -6,6 +7,11 @@ import { VisionView } from './components/VisionView';
 import { SimulatorView } from './components/SimulatorView';
 import { RecommendationsView } from './components/RecommendationsView';
 import { ReportView } from './components/ReportView';
+import { AboutView } from './components/AboutView';
+import { PrivacyView } from './components/PrivacyView';
+import { TermsView } from './components/TermsView';
+import { NotFoundView } from './components/NotFoundView';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Bin, HealthResponse, MetricsSnapshot, api } from './api';
 import { AlertCircle, CheckCircle, Info, X } from 'lucide-react';
 
@@ -16,6 +22,7 @@ interface ToastItem {
 }
 
 export const App: React.FC = () => {
+  const navigate = useNavigate();
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('ecotwin-theme');
     if (saved === 'light' || saved === 'dark') return saved;
@@ -31,7 +38,6 @@ export const App: React.FC = () => {
     setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
   };
 
-  const [activeTab, setActiveTab] = useState<string>('overview');
   const [bins, setBins] = useState<Bin[]>([]);
   const [metrics, setMetrics] = useState<MetricsSnapshot | null>(null);
   const [health, setHealth] = useState<HealthResponse | null>(null);
@@ -39,13 +45,16 @@ export const App: React.FC = () => {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [visionTargetBinId, setVisionTargetBinId] = useState<number | undefined>(undefined);
 
-  const addToast = useCallback((message: string, type: 'success' | 'warning' | 'error' | 'info' = 'info') => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4500);
-  }, []);
+  const addToast = useCallback(
+    (message: string, type: 'success' | 'warning' | 'error' | 'info' = 'info') => {
+      const id = Math.random().toString(36).substring(2, 9);
+      setToasts((prev) => [...prev, { id, message, type }]);
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 4500);
+    },
+    []
+  );
 
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -62,8 +71,8 @@ export const App: React.FC = () => {
       const binList = await api.getBins();
       setBins(binList);
 
-      // Fetch current baseline metrics via 0-hr simulation
-      const sim = await api.simulate(0);
+      // Fetch current baseline metrics via 1-hr simulation step
+      const sim = await api.simulate(1);
       setMetrics(sim.baseline);
     } catch (err: any) {
       console.warn('Backend not yet reachable or loading:', err);
@@ -73,6 +82,15 @@ export const App: React.FC = () => {
         version: '0.1.0',
         database: 'connected',
         detector: 'loaded',
+      });
+      setMetrics({
+        overflow_incidents: 0,
+        total_truck_distance_km: 12.4,
+        avg_contamination_rate: 0.21,
+        estimated_co2_kg: 3.35,
+        bins_at_risk: 1,
+        avg_fill_level: 38.5,
+        data_source: 'simulated',
       });
     } finally {
       setIsLoading(false);
@@ -93,14 +111,14 @@ export const App: React.FC = () => {
 
   const handleNavigateToVision = (binId?: number) => {
     setVisionTargetBinId(binId);
-    setActiveTab('detection');
+    navigate('/vision');
   };
 
   const handleApplyScenarioFromRecommendation = (
     _scenarioType: string,
     _params: Record<string, unknown>
   ) => {
-    setActiveTab('simulator');
+    navigate('/simulator');
     addToast('Scenario loaded into sandbox. Adjust parameters and simulate.', 'info');
   };
 
@@ -110,8 +128,6 @@ export const App: React.FC = () => {
 
       {/* Navigation Header */}
       <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
         health={health}
         onDownloadReport={handleDownloadReport}
         theme={theme}
@@ -120,42 +136,51 @@ export const App: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="main-content">
-        {activeTab === 'overview' && (
-          <OverviewView
-            bins={bins}
-            metrics={metrics}
-            onRefresh={fetchTwinData}
-            isLoading={isLoading}
-            onNavigateToVision={handleNavigateToVision}
-          />
-        )}
-
-        {activeTab === 'detection' && (
-          <VisionView
-            bins={bins}
-            initialBinId={visionTargetBinId}
-            onTwinUpdated={fetchTwinData}
-            showToast={addToast}
-          />
-        )}
-
-        {activeTab === 'simulator' && (
-          <SimulatorView
-            bins={bins}
-            showToast={addToast}
-          />
-        )}
-
-        {activeTab === 'recommendations' && (
-          <RecommendationsView
-            onApplyScenario={handleApplyScenarioFromRecommendation}
-            showToast={addToast}
-          />
-        )}
-
-        {activeTab === 'report' && (
-          <ReportView onDownloadReport={handleDownloadReport} />
-        )}
+        <ErrorBoundary>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <OverviewView
+                  bins={bins}
+                  metrics={metrics}
+                  onRefresh={fetchTwinData}
+                  isLoading={isLoading}
+                  onNavigateToVision={handleNavigateToVision}
+                />
+              }
+            />
+            <Route
+              path="/vision"
+              element={
+                <VisionView
+                  bins={bins}
+                  initialBinId={visionTargetBinId}
+                  onTwinUpdated={fetchTwinData}
+                  showToast={addToast}
+                />
+              }
+            />
+            <Route path="/simulator" element={<SimulatorView bins={bins} showToast={addToast} />} />
+            <Route
+              path="/recommendations"
+              element={
+                <RecommendationsView
+                  onApplyScenario={handleApplyScenarioFromRecommendation}
+                  showToast={addToast}
+                />
+              }
+            />
+            <Route
+              path="/report"
+              element={<ReportView onDownloadReport={handleDownloadReport} />}
+            />
+            <Route path="/about" element={<AboutView />} />
+            <Route path="/privacy" element={<PrivacyView />} />
+            <Route path="/terms" element={<TermsView />} />
+            <Route path="*" element={<NotFoundView />} />
+          </Routes>
+        </ErrorBoundary>
       </main>
 
       {/* Toast Notification Layer */}
@@ -182,13 +207,43 @@ export const App: React.FC = () => {
       {/* Footer */}
       <footer className="site-footer">
         <div className="footer-inner">
-          <div className="footer-left">
+          <div
+            className="footer-left"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}
+          >
             <span>EcoTwin &bull; Universal Smart Waste Digital Twin</span>
+            <span className="footer-divider">&bull;</span>
+            <Link
+              to="/about"
+              style={{ color: 'var(--color-text-secondary)', textDecoration: 'none' }}
+            >
+              About
+            </Link>
+            <span className="footer-divider">&bull;</span>
+            <Link
+              to="/privacy"
+              style={{ color: 'var(--color-text-secondary)', textDecoration: 'none' }}
+            >
+              Privacy Policy
+            </Link>
+            <span className="footer-divider">&bull;</span>
+            <Link
+              to="/terms"
+              style={{ color: 'var(--color-text-secondary)', textDecoration: 'none' }}
+            >
+              Terms of Service
+            </Link>
           </div>
           <div className="footer-right">
             <span>Author: Nihar D Kiran</span>
             <span className="footer-divider">&bull;</span>
-            <span className="font-mono text-xs">nihardkiran@gmail.com</span>
+            <a
+              href="mailto:nihardkiran@gmail.com"
+              className="font-mono text-xs"
+              style={{ color: 'inherit', textDecoration: 'none' }}
+            >
+              nihardkiran@gmail.com
+            </a>
             <span className="footer-divider">&bull;</span>
             <span className="font-mono text-xs">+91 9538196152</span>
           </div>

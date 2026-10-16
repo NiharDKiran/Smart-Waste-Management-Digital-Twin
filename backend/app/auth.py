@@ -139,7 +139,8 @@ async def require_admin(
         )
 
     username = payload.get("sub")
-    if username != "admin":
+    settings = get_settings()
+    if username != settings.admin_username:
         raise HTTPException(status_code=403, detail="Admin access required")
 
     return username

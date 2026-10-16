@@ -1,14 +1,14 @@
 import React from 'react';
-import { 
-  FileText, 
-  Download, 
-  CheckCircle2, 
-  ExternalLink, 
-  ShieldCheck, 
-  Cpu, 
-  GitBranch, 
+import {
+  FileText,
+  Download,
+  CheckCircle2,
+  ExternalLink,
+  ShieldCheck,
+  Cpu,
+  GitBranch,
   Sparkles,
-  Info
+  Info,
 } from 'lucide-react';
 import { api } from '../api';
 
@@ -23,16 +23,13 @@ export const ReportView: React.FC<ReportViewProps> = ({ onDownloadReport }) => {
         <div>
           <h1 className="view-title">Executive Audit &amp; Technical Specification</h1>
           <p className="view-description">
-            Comprehensive compliance documentation, environmental accounting methodologies, and architectural breakdown.
+            Comprehensive compliance documentation, environmental accounting methodologies, and
+            architectural breakdown.
           </p>
         </div>
 
         <div className="toolbar-controls">
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={onDownloadReport}
-          >
+          <button type="button" className="btn btn-primary" onClick={onDownloadReport}>
             <Download size={16} />
             <span>Generate &amp; Download PDF Audit</span>
           </button>
@@ -59,7 +56,9 @@ export const ReportView: React.FC<ReportViewProps> = ({ onDownloadReport }) => {
                 <div>
                   <h4 className="pillar-title">1. Computer Vision</h4>
                   <p className="pillar-desc">
-                    Ultralytics YOLOv8 running on CPU. Maps raw bounding box inferences into four universal segregation streams (Wet, Dry, Recyclable, Hazardous) through configurable <code className="font-mono">label_map.yaml</code>.
+                    Ultralytics YOLOv8 running on CPU. Maps raw bounding box inferences into four
+                    universal segregation streams (Wet, Dry, Recyclable, Hazardous) through
+                    configurable <code className="font-mono">label_map.yaml</code>.
                   </p>
                 </div>
               </div>
@@ -71,7 +70,9 @@ export const ReportView: React.FC<ReportViewProps> = ({ onDownloadReport }) => {
                 <div>
                   <h4 className="pillar-title">2. Digital Twin Engine</h4>
                   <p className="pillar-desc">
-                    Continuous simulation model tracking 20 receptacle nodes across 5 zones. Simulates hourly fill increments, dynamic contamination spread, nearest-neighbour collection routes, and scenario delta diffs.
+                    Continuous simulation model tracking 20 receptacle nodes across 5 zones.
+                    Simulates hourly fill increments, dynamic contamination spread,
+                    nearest-neighbour collection routes, and scenario delta diffs.
                   </p>
                 </div>
               </div>
@@ -83,7 +84,9 @@ export const ReportView: React.FC<ReportViewProps> = ({ onDownloadReport }) => {
                 <div>
                   <h4 className="pillar-title">3. Generative AI Advisory</h4>
                   <p className="pillar-desc">
-                    Google Gemini Flash generative AI integration. Ingests raw telemetry matrices and outputs structured JSON remediation strategies with automatic retry and graceful cache fallbacks.
+                    Google Gemini Flash generative AI integration. Ingests raw telemetry matrices
+                    and outputs structured JSON remediation strategies with automatic retry and
+                    graceful cache fallbacks.
                   </p>
                 </div>
               </div>
@@ -102,42 +105,73 @@ export const ReportView: React.FC<ReportViewProps> = ({ onDownloadReport }) => {
           </div>
 
           <div className="panel-card-body p-0">
-            <table className="methodology-table">
-              <thead>
-                <tr>
-                  <th>Factor Vector</th>
-                  <th>Value</th>
-                  <th>Unit</th>
-                  <th>Carbon Attribution Mechanism</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="font-medium">Diesel Fleet Route</td>
-                  <td className="font-mono">0.210</td>
-                  <td className="font-mono">kg CO2/km</td>
-                  <td>Direct tailpipe emissions per collection kilometre traveled</td>
-                </tr>
-                <tr>
-                  <td className="font-medium">Unsegregated Landfill</td>
-                  <td className="font-mono">1.420</td>
-                  <td className="font-mono">kg CO2/kg</td>
-                  <td>Anaerobic decomposition fugitive methane generation</td>
-                </tr>
-                <tr>
-                  <td className="font-medium">Composting Diversion</td>
-                  <td className="font-mono text-primary">-0.350</td>
-                  <td className="font-mono">kg CO2/kg</td>
-                  <td>Avoided methane credit via aerobic organic decomposition</td>
-                </tr>
-                <tr>
-                  <td className="font-medium">Recycling Circularity</td>
-                  <td className="font-mono text-primary">-0.850</td>
-                  <td className="font-mono">kg CO2/kg</td>
-                  <td>Offset from displacing virgin aluminum and PET manufacturing</td>
-                </tr>
-              </tbody>
-            </table>
+            <div className="methodology-table-wrapper table-wrapper">
+              <table className="methodology-table">
+                <thead>
+                  <tr>
+                    <th>Factor Vector</th>
+                    <th>Value</th>
+                    <th>Unit</th>
+                    <th>Description</th>
+                    <th>Source</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="font-medium font-mono">truck_per_km</td>
+                    <td className="font-mono">0.27</td>
+                    <td className="font-mono">kg_co2_per_km</td>
+                    <td>CO2 emissions per kilometer for a diesel waste collection truck</td>
+                    <td className="font-mono text-muted">TODO</td>
+                  </tr>
+                  <tr>
+                    <td className="font-medium font-mono">overflow_cleanup</td>
+                    <td className="font-mono">2.50</td>
+                    <td className="font-mono">kg_co2_per_incident</td>
+                    <td>
+                      CO2 cost of an emergency overflow cleanup (extra truck dispatch, cleaning)
+                    </td>
+                    <td className="font-mono text-muted">TODO</td>
+                  </tr>
+                  <tr>
+                    <td className="font-medium font-mono">landfill_per_kg</td>
+                    <td className="font-mono">0.58</td>
+                    <td className="font-mono">kg_co2_per_kg</td>
+                    <td>CO2 emissions per kg of waste sent to landfill</td>
+                    <td className="font-mono text-muted">TODO</td>
+                  </tr>
+                  <tr>
+                    <td className="font-medium font-mono">recycling_offset_per_kg</td>
+                    <td className="font-mono text-primary">-0.31</td>
+                    <td className="font-mono">kg_co2_per_kg</td>
+                    <td>
+                      CO2 offset per kg of waste successfully recycled (negative means savings)
+                    </td>
+                    <td className="font-mono text-muted">TODO</td>
+                  </tr>
+                  <tr>
+                    <td className="font-medium font-mono">contamination_penalty</td>
+                    <td className="font-mono">0.15</td>
+                    <td className="font-mono">kg_co2_per_contaminated_kg</td>
+                    <td>
+                      Additional CO2 cost when contaminated waste cannot be recycled and goes to
+                      landfill
+                    </td>
+                    <td className="font-mono text-muted">TODO</td>
+                  </tr>
+                  <tr>
+                    <td className="font-medium font-mono">segregation_intervention_factor</td>
+                    <td className="font-mono">0.30</td>
+                    <td className="font-mono">reduction_fraction</td>
+                    <td>
+                      Fraction by which contamination is reduced after a segregation awareness
+                      intervention
+                    </td>
+                    <td className="font-mono text-muted">TODO</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 

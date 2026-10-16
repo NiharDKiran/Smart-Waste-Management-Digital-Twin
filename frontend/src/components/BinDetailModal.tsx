@@ -1,14 +1,14 @@
 import React from 'react';
-import { 
-  X, 
-  Trash2, 
-  AlertTriangle, 
-  Clock, 
-  BarChart2, 
-  MapPin, 
-  TrendingUp, 
+import {
+  X,
+  Trash2,
+  AlertTriangle,
+  Clock,
+  BarChart2,
+  MapPin,
+  TrendingUp,
   ShieldAlert,
-  ArrowRight
+  ArrowRight,
 } from 'lucide-react';
 import { Bin } from '../api';
 
@@ -31,9 +31,10 @@ export const BinDetailModal: React.FC<BinDetailModalProps> = ({
   const hazPct = Math.round((bin.waste_type_mix?.hazardous || 0) * 100);
   const contaminationPct = Math.round(bin.contamination_score * 100);
 
-  const fillPct = bin.capacity_liters > 0
-    ? Math.min(100, Math.max(0, (bin.fill_level / bin.capacity_liters) * 100))
-    : Math.min(100, bin.fill_level);
+  const fillPct =
+    bin.capacity_liters > 0
+      ? Math.min(100, Math.max(0, (bin.fill_level / bin.capacity_liters) * 100))
+      : Math.min(100, bin.fill_level);
 
   let fillStatusClass = 'status-normal';
   if (fillPct >= 80 || bin.overflow_risk) {
@@ -53,7 +54,8 @@ export const BinDetailModal: React.FC<BinDetailModalProps> = ({
             <div>
               <div className="modal-title">{bin.name}</div>
               <div className="modal-subtitle">
-                <MapPin size={12} /> {bin.zone_name} ({bin.zone_type}) &bull; Lat {bin.latitude.toFixed(4)}, Lng {bin.longitude.toFixed(4)}
+                <MapPin size={12} /> {bin.zone_name} ({bin.zone_type}) &bull; Lat{' '}
+                {bin.latitude.toFixed(4)}, Lng {bin.longitude.toFixed(4)}
               </div>
             </div>
           </div>
@@ -68,7 +70,8 @@ export const BinDetailModal: React.FC<BinDetailModalProps> = ({
               <AlertTriangle size={16} />
               <div>
                 <strong>Overflow Alert:</strong> Projected to overflow in{' '}
-                <span className="font-mono">{bin.hours_until_overflow ?? 1} hours</span>. Priority collection recommended.
+                <span className="font-mono">{bin.hours_until_overflow ?? 1} hours</span>. Priority
+                collection recommended.
               </div>
             </div>
           )}
@@ -77,9 +80,7 @@ export const BinDetailModal: React.FC<BinDetailModalProps> = ({
           <div className="metrics-grid-2">
             <div className="metric-box">
               <div className="metric-box-label">Fill Level</div>
-              <div className="metric-box-value font-mono">
-                {fillPct.toFixed(1)}%
-              </div>
+              <div className="metric-box-value font-mono">{fillPct.toFixed(1)}%</div>
               <div className="progress-bar-bg">
                 <div
                   className={`progress-bar-fill ${fillStatusClass}`}
@@ -87,26 +88,31 @@ export const BinDetailModal: React.FC<BinDetailModalProps> = ({
                 />
               </div>
               <div className="metric-subtext">
-                Current: <span className="font-mono">{bin.fill_level.toFixed(1)}L / {bin.capacity_liters}L</span> &bull; Rate: <span className="font-mono">+{bin.per_hour_fill_rate}L/hr</span>
+                Current:{' '}
+                <span className="font-mono">
+                  {bin.fill_level.toFixed(1)}L / {bin.capacity_liters}L
+                </span>{' '}
+                &bull; Rate: <span className="font-mono">+{bin.per_hour_fill_rate}L/hr</span>
               </div>
             </div>
 
             <div className="metric-box">
               <div className="metric-box-label">Contamination Score</div>
-              <div className="metric-box-value font-mono">
-                {contaminationPct}%
-              </div>
+              <div className="metric-box-value font-mono">{contaminationPct}%</div>
               <div className="progress-bar-bg">
                 <div
                   className="progress-bar-fill"
                   style={{
                     width: `${contaminationPct}%`,
-                    backgroundColor: contaminationPct > 30 ? 'var(--color-error)' : 'var(--color-primary-500)',
+                    backgroundColor:
+                      contaminationPct > 30 ? 'var(--color-error)' : 'var(--color-primary-500)',
                   }}
                 />
               </div>
               <div className="metric-subtext">
-                {contaminationPct > 25 ? 'High cross-contamination risk' : 'Healthy segregation level'}
+                {contaminationPct > 25
+                  ? 'High cross-contamination risk'
+                  : 'Healthy segregation level'}
               </div>
             </div>
           </div>
@@ -119,10 +125,26 @@ export const BinDetailModal: React.FC<BinDetailModalProps> = ({
             </div>
 
             <div className="waste-mix-stacked-bar">
-              <div className="mix-segment mix-wet" style={{ width: `${wetPct}%` }} title={`Wet: ${wetPct}%`} />
-              <div className="mix-segment mix-dry" style={{ width: `${dryPct}%` }} title={`Dry: ${dryPct}%`} />
-              <div className="mix-segment mix-recyclable" style={{ width: `${recPct}%` }} title={`Recyclable: ${recPct}%`} />
-              <div className="mix-segment mix-hazardous" style={{ width: `${hazPct}%` }} title={`Hazardous: ${hazPct}%`} />
+              <div
+                className="mix-segment mix-wet"
+                style={{ width: `${wetPct}%` }}
+                title={`Wet: ${wetPct}%`}
+              />
+              <div
+                className="mix-segment mix-dry"
+                style={{ width: `${dryPct}%` }}
+                title={`Dry: ${dryPct}%`}
+              />
+              <div
+                className="mix-segment mix-recyclable"
+                style={{ width: `${recPct}%` }}
+                title={`Recyclable: ${recPct}%`}
+              />
+              <div
+                className="mix-segment mix-hazardous"
+                style={{ width: `${hazPct}%` }}
+                title={`Hazardous: ${hazPct}%`}
+              />
             </div>
 
             <div className="waste-mix-legend">
@@ -149,7 +171,12 @@ export const BinDetailModal: React.FC<BinDetailModalProps> = ({
           <div className="telemetry-info-row">
             <div>
               <span className="label-dim">Last Collection:</span>{' '}
-              <span className="font-mono">{new Date(bin.last_collected).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              <span className="font-mono">
+                {new Date(bin.last_collected).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
             </div>
             <div>
               <span className="label-dim">Twin Mode:</span>{' '}
@@ -159,11 +186,7 @@ export const BinDetailModal: React.FC<BinDetailModalProps> = ({
         </div>
 
         <div className="modal-footer">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={onClose}
-          >
+          <button type="button" className="btn btn-secondary" onClick={onClose}>
             Close
           </button>
           <button

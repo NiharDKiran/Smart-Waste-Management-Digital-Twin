@@ -1,4 +1,13 @@
-const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : '');
+import axios, { AxiosInstance, AxiosError } from "axios";
+
+// ── Base URL resolution ──
+// In production, set VITE_API_URL to your backend (e.g. https://ecotwin-api.onrender.com)
+// In dev, Vite's proxy in vite.config.ts forwards /api/* to localhost:8000
+const API_BASE: string =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? "http://localhost:8000" : "");
+
+// ── Interfaces ──
 
 export interface WasteTypeMix {
   wet: number;
@@ -112,6 +121,7 @@ export interface RecommendationResponse {
   assumptions: string[];
   is_cached: boolean;
   data_source: string;
+  timestamp?: string | null;
 }
 
 export interface HealthResponse {
@@ -127,22 +137,76 @@ export interface ApiError {
   retry: boolean;
 }
 
-class ApiClient {
-  private base: string;
+// ── Axios-based API Client ──
 
+class ApiClient {
+  private http: AxiosInstance;
   private token: string | null = null;
 
   constructor(baseUrl: string) {
-    this.base = baseUrl;
-    this.token = typeof window !== 'undefined' ? localStorage.getItem('ecotwin_token') : null;
+    this.token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("ecotwin_token")
+        : null;
+
+    this.http = axios.create({
+      baseURL: baseUrl,
+      timeout: 60_000, // 60s for long inference calls
+    });
+
+    // ── Request interceptor: attach JWT when present ──
+    this.http.interceptors.request.use((config) => {
+      if (this.token) {
+        config.headers.Authorization = `Bearer ${this.token}`;
+      }
+      return config;
+    });
+
+    // ── Response interceptor: normalise errors into ApiError shape ──
+    this.http.interceptors.response.use(
+      (response) => response,
+      (error: AxiosError) => {
+        let apiError: ApiError;
+
+        if (error.response) {
+          // Server responded with a non-2xx status
+          const data = error.response.data as Record<string, unknown> | undefined;
+          apiError = {
+            error:
+              (data?.error as string) ??
+              `Request failed with status ${error.response.status}`,
+            detail: (data?.detail as string) ?? error.response.statusText ?? "",
+            retry: error.response.status >= 500,
+          };
+        } else if (error.request) {
+          // Request was sent but no response received (network / CORS)
+          apiError = {
+            error: "Network error",
+            detail:
+              "Could not reach the API server. Check your connection or VITE_API_URL.",
+            retry: true,
+          };
+        } else {
+          apiError = {
+            error: "Request setup error",
+            detail: error.message,
+            retry: false,
+          };
+        }
+
+        return Promise.reject(apiError);
+      },
+    );
   }
+
+  // ── Token helpers ──
 
   setToken(token: string | null) {
     this.token = token;
     if (token) {
-      localStorage.setItem('ecotwin_token', token);
+      localStorage.setItem("ecotwin_token", token);
     } else {
-      localStorage.removeItem('ecotwin_token');
+      localStorage.removeItem("ecotwin_token");
     }
   }
 
@@ -150,108 +214,93 @@ class ApiClient {
     return this.token;
   }
 
-  private async request<T>(path: string, options?: RequestInit): Promise<T> {
-    const url = `${this.base}${path}`;
-    const headers: Record<string, string> = {
-      ...(options?.headers as Record<string, string>),
-    };
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
-    }
-
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
-
-    if (!response.ok) {
-      let errorData: ApiError;
-      try {
-        errorData = await response.json();
-      } catch {
-        errorData = {
-          error: `Request failed with status ${response.status}`,
-          detail: response.statusText,
-          retry: response.status >= 500,
-        };
-      }
-      throw errorData;
-    }
-
-    return response.json();
-  }
+  // ── Public endpoints ──
 
   async health(): Promise<HealthResponse> {
-    return this.request<HealthResponse>('/api/health');
+    const { data } = await this.http.get<HealthResponse>("/api/health");
+    return data;
   }
 
   async getBins(): Promise<Bin[]> {
-    return this.request<Bin[]>('/api/bins');
+    const { data } = await this.http.get<Bin[]>("/api/bins");
+    return data;
   }
 
   async getBin(id: number): Promise<Bin> {
-    return this.request<Bin>(`/api/bins/${id}`);
+    const { data } = await this.http.get<Bin>(`/api/bins/${id}`);
+    return data;
   }
 
-  async detect(file: File, binId?: number, useGemini: boolean = false): Promise<DetectionResponse> {
+  async detect(
+    file: File,
+    binId?: number,
+    useGemini: boolean = false,
+  ): Promise<DetectionResponse> {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
     if (binId !== undefined) {
-      formData.append('bin_id', binId.toString());
+      formData.append("bin_id", binId.toString());
     }
     if (useGemini) {
-      formData.append('use_gemini', 'true');
+      formData.append("use_gemini", "true");
     }
-    return this.request<DetectionResponse>('/api/detect', {
-      method: 'POST',
-      body: formData,
-    });
+
+    const { data } = await this.http.post<DetectionResponse>(
+      "/api/detect",
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 120_000, // image uploads may be slow
+      },
+    );
+    return data;
   }
 
-  async simulate(hours: number, scenario?: ScenarioRequest): Promise<SimulationResponse> {
-    return this.request<SimulationResponse>('/api/simulate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ hours, scenario }),
-    });
+  async simulate(
+    hours: number,
+    scenario?: ScenarioRequest,
+  ): Promise<SimulationResponse> {
+    const { data } = await this.http.post<SimulationResponse>(
+      "/api/simulate",
+      { hours, scenario },
+    );
+    return data;
   }
 
   async getScenarios(): Promise<Scenario[]> {
-    return this.request<Scenario[]>('/api/scenarios');
+    const { data } = await this.http.get<Scenario[]>("/api/scenarios");
+    return data;
   }
 
   async saveScenario(scenario: ScenarioRequest): Promise<Scenario> {
-    return this.request<Scenario>('/api/scenarios', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(scenario),
-    });
+    const { data } = await this.http.post<Scenario>(
+      "/api/scenarios",
+      scenario,
+    );
+    return data;
   }
 
   async getRecommendations(): Promise<RecommendationResponse> {
-    return this.request<RecommendationResponse>('/api/recommend', {
-      method: 'POST',
-    });
-  }
-
-  async login(username: string, password: string): Promise<{ access_token: string }> {
-    const res = await this.request<{ access_token: string }>('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-    this.setToken(res.access_token);
-    return res;
+    const { data } = await this.http.post<RecommendationResponse>(
+      "/api/recommend",
+    );
+    return data;
   }
 
   async authMe(): Promise<{ authenticated: boolean; username?: string }> {
-    return this.request<{ authenticated: boolean; username?: string }>('/api/auth/me');
+    const { data } = await this.http.get<{
+      authenticated: boolean;
+      username?: string;
+    }>("/api/auth/me");
+    return data;
   }
 
   async adminResetTwin(): Promise<{ message: string; admin: string }> {
-    return this.request<{ message: string; admin: string }>('/api/admin/reset-twin', {
-      method: 'POST',
-    });
+    const { data } = await this.http.post<{
+      message: string;
+      admin: string;
+    }>("/api/admin/reset-twin");
+    return data;
   }
 
   logout() {
@@ -259,7 +308,7 @@ class ApiClient {
   }
 
   getReportUrl(): string {
-    return `${this.base}/api/report`;
+    return `${this.http.defaults.baseURL}/api/report`;
   }
 }
 

@@ -8,11 +8,7 @@ interface FacilityMapProps {
   onSelectBin: (bin: Bin) => void;
 }
 
-export const FacilityMap: React.FC<FacilityMapProps> = ({
-  bins,
-  selectedBin,
-  onSelectBin,
-}) => {
+export const FacilityMap: React.FC<FacilityMapProps> = ({ bins, selectedBin, onSelectBin }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<{ [id: number]: L.Marker }>({});
@@ -76,9 +72,10 @@ export const FacilityMap: React.FC<FacilityMapProps> = ({
       const lng = bin.longitude;
       bounds.extend([lat, lng]);
 
-      const fillPct = bin.capacity_liters > 0 
-        ? Math.min(100, Math.max(0, Math.round((bin.fill_level / bin.capacity_liters) * 100))) 
-        : Math.min(100, Math.max(0, Math.round(bin.fill_level)));
+      const fillPct =
+        bin.capacity_liters > 0
+          ? Math.min(100, Math.max(0, Math.round((bin.fill_level / bin.capacity_liters) * 100)))
+          : Math.min(100, Math.max(0, Math.round(bin.fill_level)));
 
       let color = 'var(--color-primary-500)'; // Green
       if (fillPct >= 80 || bin.overflow_risk) {
@@ -92,8 +89,8 @@ export const FacilityMap: React.FC<FacilityMapProps> = ({
       // Custom HTML Marker Icon
       const iconHtml = `
         <div class="map-marker-pin ${isSelected ? 'marker-selected' : ''} ${
-        bin.overflow_risk ? 'marker-pulse' : ''
-      }" style="--marker-color: ${color};">
+          bin.overflow_risk ? 'marker-pulse' : ''
+        }" style="--marker-color: ${color};">
           <div class="marker-core">
             <span class="marker-fill">${fillPct}%</span>
           </div>

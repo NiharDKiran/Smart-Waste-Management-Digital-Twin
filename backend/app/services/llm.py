@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 import httpx
 from app.config import get_settings
 from app.schemas import (
@@ -9,83 +10,26 @@ from app.schemas import (
     ErrorResponse,
 )
 
-DEFAULT_CACHED_RESPONSE = RecommendationResponse(
-    issues=[
-        RecommendationIssue(
-            title="Accelerated Fill Volatility in Food Court",
-            severity="warning",
-            description="Cafeteria and Food Court bins exhibit 3.4x peak fill rates during peak hours, triggering early overflow risk and cross-contamination.",
-            affected_zones=["Food Court"],
-            affected_bins=[9, 10, 11, 12],
-        ),
-        RecommendationIssue(
-            title="Medical Center Stream Cross-Contamination",
-            severity="critical",
-            description="Telemetry reports high hazardous waste proportion mixed with dry recyclables in clinic disposal nodes, requiring immediate segregation.",
-            affected_zones=["Medical Center"],
-            affected_bins=[13, 14, 15],
-        ),
-        RecommendationIssue(
-            title="Suboptimal Collection Route Mileage",
-            severity="info",
-            description="Outdoor gate and pathway bins have slow fill rates but consume 38% of total truck distance on fixed daily collection runs.",
-            affected_zones=["Outdoor Area"],
-            affected_bins=[17, 18, 19, 20],
-        ),
-    ],
-    actions=[
-        RecommendationAction(
-            title="Deploy 3 High-Capacity Receptacles in Food Court",
-            description="Install supplementary 120L segregated wet & recyclable bins to eliminate peak dining overflows.",
-            priority="high",
-            scenario_type="add_bins",
-            scenario_parameters={"zone_name": "Food Court", "count": 3, "capacity_liters": 120},
-            estimated_impact="Reduces food court overflow risk by 78% and stabilizes capacity.",
-        ),
-        RecommendationAction(
-            title="Dynamic Route Tuning: Boost High-Density Pickups",
-            description="Increase pickup frequency multiplier for Medical Center and Food Court to prevent container saturation.",
-            priority="medium",
-            scenario_type="change_frequency",
-            scenario_parameters={"zone_name": "Medical Center", "frequency_multiplier": 2.0},
-            estimated_impact="Eliminates acute overflow incidents while reducing total route miles.",
-        ),
-        RecommendationAction(
-            title="Facility-Wide Segregation Awareness Intervention",
-            description="Deploy visual QR-code guides and smart sorting indicators at disposal stations to curb improper cross-stream contamination.",
-            priority="high",
-            scenario_type="awareness_campaign",
-            scenario_parameters={"contamination_reduction_factor": 0.40},
-            estimated_impact="Lowers cross-contamination by 40% and boosts recycling circularity.",
-        ),
-    ],
-    expected_impact=RecommendationExpectedImpact(
-        overflow_reduction_pct=65,
-        contamination_reduction_pct=40,
-        co2_reduction_pct=28,
-        efficiency_improvement_pct=34,
-    ),
-    assumptions=[
-        "Twin simulation assumes diesel fleet emissions factor of 0.21 kg CO2/km.",
-        "Segregation awareness intervention assumes 80% facility compliance within 14 days.",
-        "Live Gemini calls can be activated anytime by providing GEMINI_API_KEY in .env.",
-    ],
-    is_cached=True,
-    data_source="gemini-cache-baseline",
-)
-
-_last_cached_response: RecommendationResponse | None = DEFAULT_CACHED_RESPONSE
+_last_real_inference: RecommendationResponse | None = None
+_last_inference_timestamp: str | None = None
 
 
 async def get_recommendations(twin_state: dict) -> RecommendationResponse | ErrorResponse:
-    global _last_cached_response
+    global _last_real_inference, _last_inference_timestamp
     settings = get_settings()
 
     if not settings.gemini_api_key:
-        if _last_cached_response:
-            _last_cached_response.is_cached = True
-            return _last_cached_response
-        return DEFAULT_CACHED_RESPONSE
+        if _last_real_inference is not None:
+            cached = _last_real_inference.model_copy(deep=True)
+            cached.is_cached = True
+            cached.data_source = "session-cache"
+            cached.timestamp = _last_inference_timestamp
+            return cached
+        return ErrorResponse(
+            error="Gemini API unavailable",
+            detail="Gemini API key is not configured and no cached inference exists for this session.",
+            retry=False,
+        )
 
     user_message = f"Current twin state:\n{json.dumps(twin_state, indent=2, default=str)}"
 
@@ -94,14 +38,22 @@ async def get_recommendations(twin_state: dict) -> RecommendationResponse | Erro
             response = await _call_gemini(settings.gemini_api_key, user_message)
             parsed = _parse_response(response)
             if parsed is not None:
-                _last_cached_response = parsed
+                now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+                parsed.timestamp = now_str
+                parsed.is_cached = False
+                parsed.data_source = "ai_generated"
+                _last_real_inference = parsed
+                _last_inference_timestamp = now_str
                 return parsed
         except (httpx.HTTPError, json.JSONDecodeError, ValueError) as exc:
             if attempt == 0:
                 continue
-            if _last_cached_response:
-                _last_cached_response.is_cached = True
-                return _last_cached_response
+            if _last_real_inference is not None:
+                cached = _last_real_inference.model_copy(deep=True)
+                cached.is_cached = True
+                cached.data_source = "session-cache"
+                cached.timestamp = _last_inference_timestamp
+                return cached
             err_detail = "LLM service communication error." if not settings.debug else str(exc)
             return ErrorResponse(
                 error="Failed to get recommendations from Gemini",
@@ -109,9 +61,13 @@ async def get_recommendations(twin_state: dict) -> RecommendationResponse | Erro
                 retry=True,
             )
 
-    if _last_cached_response:
-        _last_cached_response.is_cached = True
-        return _last_cached_response
+    if _last_real_inference is not None:
+        cached = _last_real_inference.model_copy(deep=True)
+        cached.is_cached = True
+        cached.data_source = "session-cache"
+        cached.timestamp = _last_inference_timestamp
+        return cached
+
     return ErrorResponse(
         error="Failed to parse Gemini response after retries",
         detail="The LLM returned invalid JSON twice. Try again later.",
@@ -228,4 +184,3 @@ def _parse_response(raw: str) -> RecommendationResponse | None:
         is_cached=False,
         data_source="ai_generated",
     )
-

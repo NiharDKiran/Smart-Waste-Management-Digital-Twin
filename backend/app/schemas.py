@@ -126,6 +126,7 @@ class RecommendationResponse(BaseModel):
     assumptions: list[str]
     is_cached: bool = False
     data_source: str = "ai_generated"
+    timestamp: Optional[str] = None
 
 
 class HealthResponse(BaseModel):

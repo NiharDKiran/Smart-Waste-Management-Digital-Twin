@@ -19,9 +19,6 @@ from app.middleware import (
     RequestLoggingMiddleware,
 )
 from app.auth import (
-    hash_password,
-    verify_password,
-    create_token,
     require_admin,
     get_current_user,
     sanitize_string,
@@ -127,39 +124,6 @@ app.add_middleware(
 # ═══════════════════════════════════════════════════════════════
 # AUTH ENDPOINTS
 # ═══════════════════════════════════════════════════════════════
-
-@app.post("/api/auth/login")
-@limiter.limit("5/minute")
-async def login(request: Request):
-    """Authenticate admin user and return a JWT token."""
-    try:
-        body = await request.json()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON body")
-
-    username = sanitize_string(body.get("username", ""), max_length=100)
-    password = body.get("password", "")
-
-    if not username or not password:
-        raise HTTPException(status_code=400, detail="Username and password required")
-
-    admin_settings = get_settings()
-
-    # If no admin password hash is configured, admin login is disabled
-    if not admin_settings.admin_password_hash:
-        raise HTTPException(
-            status_code=403,
-            detail="Admin login is not configured. Set ADMIN_PASSWORD_HASH in .env",
-        )
-
-    if username != admin_settings.admin_username:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    if not verify_password(password, admin_settings.admin_password_hash):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    token = create_token(username)
-    return {"access_token": token, "token_type": "bearer"}
 
 
 @app.get("/api/auth/me")

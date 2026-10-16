@@ -1,26 +1,26 @@
 import React, { useState } from 'react';
-import { 
-  GitBranch, 
-  Play, 
-  Sliders, 
-  TrendingDown, 
-  TrendingUp, 
-  Save, 
-  Clock, 
-  Check, 
+import {
+  GitBranch,
+  Play,
+  Sliders,
+  TrendingDown,
+  TrendingUp,
+  Save,
+  Clock,
+  Check,
   Sparkles,
   BarChart2,
-  AlertTriangle
+  AlertTriangle,
 } from 'lucide-react';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  Tooltip, 
-  ResponsiveContainer, 
-  Legend, 
-  CartesianGrid 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+  CartesianGrid,
 } from 'recharts';
 import { Bin, ScenarioRequest, SimulationResponse, api } from '../api';
 
@@ -129,33 +129,36 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({ bins, showToast })
   };
 
   // Prepare chart comparison data if result exists
-  const chartData = simulationResult && simulationResult.scenario ? [
-    {
-      metric: 'Overflows',
-      Baseline: simulationResult.baseline.overflow_incidents,
-      Scenario: simulationResult.scenario.overflow_incidents,
-    },
-    {
-      metric: 'Route Dist (km)',
-      Baseline: Math.round(simulationResult.baseline.total_truck_distance_km * 10) / 10,
-      Scenario: Math.round(simulationResult.scenario.total_truck_distance_km * 10) / 10,
-    },
-    {
-      metric: 'Contam (%)',
-      Baseline: Math.round(simulationResult.baseline.avg_contamination_rate * 100),
-      Scenario: Math.round(simulationResult.scenario.avg_contamination_rate * 100),
-    },
-    {
-      metric: 'CO2 (kg)',
-      Baseline: Math.round(simulationResult.baseline.estimated_co2_kg * 10) / 10,
-      Scenario: Math.round(simulationResult.scenario.estimated_co2_kg * 10) / 10,
-    },
-    {
-      metric: 'Bins at Risk',
-      Baseline: simulationResult.baseline.bins_at_risk,
-      Scenario: simulationResult.scenario.bins_at_risk,
-    },
-  ] : [];
+  const chartData =
+    simulationResult && simulationResult.scenario
+      ? [
+          {
+            metric: 'Overflows',
+            Baseline: simulationResult.baseline.overflow_incidents,
+            Scenario: simulationResult.scenario.overflow_incidents,
+          },
+          {
+            metric: 'Route Dist (km)',
+            Baseline: Math.round(simulationResult.baseline.total_truck_distance_km * 10) / 10,
+            Scenario: Math.round(simulationResult.scenario.total_truck_distance_km * 10) / 10,
+          },
+          {
+            metric: 'Contam (%)',
+            Baseline: Math.round(simulationResult.baseline.avg_contamination_rate * 100),
+            Scenario: Math.round(simulationResult.scenario.avg_contamination_rate * 100),
+          },
+          {
+            metric: 'CO2 (kg)',
+            Baseline: Math.round(simulationResult.baseline.estimated_co2_kg * 10) / 10,
+            Scenario: Math.round(simulationResult.scenario.estimated_co2_kg * 10) / 10,
+          },
+          {
+            metric: 'Bins at Risk',
+            Baseline: simulationResult.baseline.bins_at_risk,
+            Scenario: simulationResult.scenario.bins_at_risk,
+          },
+        ]
+      : [];
 
   return (
     <div className="tab-view-container">
@@ -163,7 +166,8 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({ bins, showToast })
         <div>
           <h1 className="view-title">Digital Twin Scenario Sandbox &amp; Simulator</h1>
           <p className="view-description">
-            Run forward-looking temporal simulations to stress-test collection frequency, infrastructure additions, and segregation policies before physical deployment.
+            Run forward-looking temporal simulations to stress-test collection frequency,
+            infrastructure additions, and segregation policies before physical deployment.
           </p>
         </div>
       </div>
@@ -251,7 +255,9 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({ bins, showToast })
                 >
                   <option value="add_bins">Add Supplementary Receptacles</option>
                   <option value="change_frequency">Alter Pickup Frequency Multiplier</option>
-                  <option value="awareness_campaign">Awareness Intervention (Reduce Contamination)</option>
+                  <option value="awareness_campaign">
+                    Awareness Intervention (Reduce Contamination)
+                  </option>
                 </select>
               </div>
 
@@ -325,7 +331,8 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({ bins, showToast })
                 <div className="conditional-fields-group">
                   <div className="form-group">
                     <label className="form-label">
-                      Contamination Reduction: <span className="font-mono">-{contaminationReduction}%</span>
+                      Contamination Reduction:{' '}
+                      <span className="font-mono">-{contaminationReduction}%</span>
                     </label>
                     <input
                       type="range"
@@ -349,7 +356,9 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({ bins, showToast })
                   disabled={isSimulating}
                 >
                   <Play size={18} className={isSimulating ? 'icon-spin' : ''} />
-                  <span>{isSimulating ? 'Computing Digital Twin Trajectory...' : 'Run Twin Simulation'}</span>
+                  <span>
+                    {isSimulating ? 'Computing Digital Twin Trajectory...' : 'Run Twin Simulation'}
+                  </span>
                 </button>
               </div>
             </div>
@@ -383,7 +392,8 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({ bins, showToast })
                   <GitBranch size={48} className="empty-state-icon" />
                   <h3>No Active Simulation Run</h3>
                   <p>
-                    Configure intervention parameters or select a preset, then click "Run Twin Simulation" to project the waste network state and calculate delta metrics.
+                    Configure intervention parameters or select a preset, then click "Run Twin
+                    Simulation" to project the waste network state and calculate delta metrics.
                   </p>
                 </div>
               ) : (
@@ -443,7 +453,9 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({ bins, showToast })
                     <div className="diff-card">
                       <div className="diff-label">Route Mileage</div>
                       <div className="diff-comparison font-mono">
-                        <span>{simulationResult.baseline.total_truck_distance_km.toFixed(1)}km</span>
+                        <span>
+                          {simulationResult.baseline.total_truck_distance_km.toFixed(1)}km
+                        </span>
                         <span className="diff-arrow">&rarr;</span>
                         <span className="diff-scenario-val">
                           {simulationResult.scenario?.total_truck_distance_km.toFixed(1)}km
@@ -452,7 +464,9 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({ bins, showToast })
                       {simulationResult.diff?.total_truck_distance_km !== undefined && (
                         <div
                           className={`diff-pill ${
-                            simulationResult.diff.total_truck_distance_km <= 0 ? 'diff-good' : 'diff-bad'
+                            simulationResult.diff.total_truck_distance_km <= 0
+                              ? 'diff-good'
+                              : 'diff-bad'
                           }`}
                         >
                           {simulationResult.diff.total_truck_distance_km <= 0 ? (
@@ -468,7 +482,9 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({ bins, showToast })
                     <div className="diff-card">
                       <div className="diff-label">Contamination Rate</div>
                       <div className="diff-comparison font-mono">
-                        <span>{Math.round(simulationResult.baseline.avg_contamination_rate * 100)}%</span>
+                        <span>
+                          {Math.round(simulationResult.baseline.avg_contamination_rate * 100)}%
+                        </span>
                         <span className="diff-arrow">&rarr;</span>
                         <span className="diff-scenario-val">
                           {simulationResult.scenario
@@ -479,7 +495,9 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({ bins, showToast })
                       {simulationResult.diff?.avg_contamination_rate !== undefined && (
                         <div
                           className={`diff-pill ${
-                            simulationResult.diff.avg_contamination_rate <= 0 ? 'diff-good' : 'diff-bad'
+                            simulationResult.diff.avg_contamination_rate <= 0
+                              ? 'diff-good'
+                              : 'diff-bad'
                           }`}
                         >
                           {simulationResult.diff.avg_contamination_rate <= 0 ? (
@@ -498,7 +516,8 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({ bins, showToast })
                   {/* Recharts Bar Chart Comparison */}
                   <div className="chart-wrapper">
                     <div className="chart-title">
-                      Baseline vs Proposed Scenario ({simulationResult.hours_simulated}-Hour Forecast)
+                      Baseline vs Proposed Scenario ({simulationResult.hours_simulated}-Hour
+                      Forecast)
                     </div>
                     <div style={{ width: '100%', height: 260 }}>
                       <ResponsiveContainer>
@@ -507,7 +526,10 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({ bins, showToast })
                           margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
                         >
                           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" />
-                          <XAxis dataKey="metric" tick={{ fill: 'currentColor', fontSize: 12, opacity: 0.7 }} />
+                          <XAxis
+                            dataKey="metric"
+                            tick={{ fill: 'currentColor', fontSize: 12, opacity: 0.7 }}
+                          />
                           <YAxis tick={{ fill: 'currentColor', fontSize: 12, opacity: 0.7 }} />
                           <Tooltip
                             contentStyle={{
@@ -519,9 +541,19 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({ bins, showToast })
                             }}
                             itemStyle={{ color: 'var(--color-text-primary)' }}
                           />
-                          <Legend wrapperStyle={{ paddingTop: 10, color: 'var(--color-text-secondary)' }} />
-                          <Bar dataKey="Baseline" fill="var(--color-text-muted)" radius={[4, 4, 0, 0]} />
-                          <Bar dataKey="Scenario" fill="var(--color-primary-500)" radius={[4, 4, 0, 0]} />
+                          <Legend
+                            wrapperStyle={{ paddingTop: 10, color: 'var(--color-text-secondary)' }}
+                          />
+                          <Bar
+                            dataKey="Baseline"
+                            fill="var(--color-text-muted)"
+                            radius={[4, 4, 0, 0]}
+                          />
+                          <Bar
+                            dataKey="Scenario"
+                            fill="var(--color-primary-500)"
+                            radius={[4, 4, 0, 0]}
+                          />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
