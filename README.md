@@ -148,4 +148,3 @@ npm run dev
 - **Lead Engineer:** Nihar D Kiran
 - **Email:** [nihardkiran@gmail.com](mailto:nihardkiran@gmail.com)
 - **Telephone:** +91 9538196152
-- **Hackathon:** Code Clash 2.0
