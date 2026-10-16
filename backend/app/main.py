@@ -99,10 +99,11 @@ app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(RequestSanitizationMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
-# ── CORS: only allow configured origins, never wildcard in production ──
-allowed_origins = [
-    o.strip() for o in settings.frontend_origin.split(",") if o.strip()
-]
+# ── CORS configuration: allow configured origins, Vercel deployments, and localhost ──
+raw_origins = [o.strip().rstrip("/") for o in settings.frontend_origin.split(",") if o.strip()]
+allow_all = "*" in raw_origins
+allowed_origins = [o for o in raw_origins if o != "*"]
+
 for p in range(5173, 5182):
     for host in ("localhost", "127.0.0.1"):
         origin = f"http://{host}:{p}"
@@ -114,10 +115,13 @@ if "http://localhost:3000" not in allowed_origins:
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST"],  # Only methods we actually use
-    allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+    allow_origins=["*"] if allow_all else allowed_origins,
+    allow_origin_regex=None if allow_all else r"^https:\/\/.*\.vercel\.app$",
+    allow_credentials=not allow_all,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=86400,
 )
 
 

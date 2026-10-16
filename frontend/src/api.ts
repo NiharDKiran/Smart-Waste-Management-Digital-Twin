@@ -3,9 +3,10 @@ import axios, { AxiosInstance, AxiosError } from "axios";
 // ── Base URL resolution ──
 // In production, set VITE_API_URL to your backend (e.g. https://ecotwin-api.onrender.com)
 // In dev, Vite's proxy in vite.config.ts forwards /api/* to localhost:8000
-const API_BASE: string =
+const rawBase =
   import.meta.env.VITE_API_URL ||
   (import.meta.env.DEV ? "http://localhost:8000" : "");
+const API_BASE: string = rawBase.replace(/\/+$/, "");
 
 // ── Interfaces ──
 
@@ -139,6 +140,10 @@ export interface ApiError {
 
 // ── Axios-based API Client ──
 
+// Retry config for Render free-tier cold starts (up to ~60s wake time)
+const MAX_RETRIES = 3;
+const RETRY_BASE_DELAY_MS = 2000;
+
 class ApiClient {
   private http: AxiosInstance;
   private token: string | null = null;
@@ -151,7 +156,7 @@ class ApiClient {
 
     this.http = axios.create({
       baseURL: baseUrl,
-      timeout: 60_000, // 60s for long inference calls
+      timeout: 90_000, // 90s to survive Render cold starts
     });
 
     // ── Request interceptor: attach JWT when present ──
@@ -162,41 +167,65 @@ class ApiClient {
       return config;
     });
 
-    // ── Response interceptor: normalise errors into ApiError shape ──
+    // ── Response interceptor: retry on network errors / 503 (cold start) ──
     this.http.interceptors.response.use(
       (response) => response,
-      (error: AxiosError) => {
-        let apiError: ApiError;
+      async (error: AxiosError) => {
+        const config = error.config as any;
+        if (!config) return Promise.reject(this.toApiError(error));
 
-        if (error.response) {
-          // Server responded with a non-2xx status
-          const data = error.response.data as Record<string, unknown> | undefined;
-          apiError = {
-            error:
-              (data?.error as string) ??
-              `Request failed with status ${error.response.status}`,
-            detail: (data?.detail as string) ?? error.response.statusText ?? "",
-            retry: error.response.status >= 500,
-          };
-        } else if (error.request) {
-          // Request was sent but no response received (network / CORS)
-          apiError = {
-            error: "Network error",
-            detail:
-              "Could not reach the API server. Check your connection or VITE_API_URL.",
-            retry: true,
-          };
-        } else {
-          apiError = {
-            error: "Request setup error",
-            detail: error.message,
-            retry: false,
-          };
+        // Track retry count on the request config
+        config.__retryCount = config.__retryCount || 0;
+
+        const isNetworkError = !error.response && !!error.request;
+        const isColdStart = error.response?.status === 503;
+        const isTimeout = error.code === "ECONNABORTED";
+
+        if (
+          (isNetworkError || isColdStart || isTimeout) &&
+          config.__retryCount < MAX_RETRIES
+        ) {
+          config.__retryCount += 1;
+          const delay =
+            RETRY_BASE_DELAY_MS * Math.pow(2, config.__retryCount - 1);
+          console.info(
+            `[EcoTwin] Retry ${config.__retryCount}/${MAX_RETRIES} for ${config.url} in ${delay}ms (${isNetworkError ? "network error" : isColdStart ? "503 cold start" : "timeout"})`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          return this.http.request(config);
         }
 
-        return Promise.reject(apiError);
+        return Promise.reject(this.toApiError(error));
       },
     );
+  }
+
+  /** Convert AxiosError to normalised ApiError */
+  private toApiError(error: AxiosError): ApiError {
+    if (error.response) {
+      const data = error.response.data as
+        | Record<string, unknown>
+        | undefined;
+      return {
+        error:
+          (data?.error as string) ??
+          `Request failed with status ${error.response.status}`,
+        detail: (data?.detail as string) ?? error.response.statusText ?? "",
+        retry: error.response.status >= 500,
+      };
+    } else if (error.request) {
+      return {
+        error: "Network error",
+        detail:
+          "Could not reach the API server. The backend may be waking up (free tier). Please wait a moment and refresh.",
+        retry: true,
+      };
+    }
+    return {
+      error: "Request setup error",
+      detail: error.message,
+      retry: false,
+    };
   }
 
   // ── Token helpers ──
