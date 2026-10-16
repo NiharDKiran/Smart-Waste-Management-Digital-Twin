@@ -1,5 +1,4 @@
 # EcoTwin: Universal Smart Waste Management Digital Twin
-
 > Universal digital twin platform combining **Computer Vision**, a **Digital Twin Engine**, and **Generative AI** for facility waste optimization.
 
 ---
